@@ -27,6 +27,8 @@ function getStartGame() {
 
         sigils: [],
 
+        collapsed: D(0),
+		
         options: {
             tickRate: 10,
 

@@ -210,6 +210,8 @@ function getButtonGain(row, tier) {
 }
 function getRowMulti(row, index) {
     index ??= game.ladder.findIndex(x => D.eq(x.tier, row));
+	if(index < 0)return D.add(getRowAmount(D.add(row, 1)), 1)
+	if(index == 0)return D.add(getRowAmount(D.add(row, 1)), 1).mul(temp.milestoneMultis[index] ?? 1).mul(temp.sigilEffects[index] ?? 1).mul(getCollapseMult());
     return D.add(getRowAmount(D.add(row, 1)), 1).mul(temp.milestoneMultis[index] ?? 1).mul(temp.sigilEffects[index] ?? 1);
 }
 function getButtonCost(row, tier) {
@@ -265,6 +267,27 @@ function makeRow(row) {
         };
         game.ladder.push(highest);
     }
+	if(D.lte(highest.tier, row) && game.ladder.length == 10 && game.unlocks.col1){
+		//if(game.collapsed.gte(5) && !game.unlocks.col2)return;
+		game.collapsed = game.collapsed.add(1);
+		for(let i = 2;i < 10; i++){
+			game.ladder[i-1]=game.ladder[i];
+		}
+		highest = {
+            tier: D.add(highest.tier, 1), 
+            amount: D(0), 
+            level: D(0),
+            presses: D(0),
+        };
+		game.ladder[9]=highest;
+		updateRuneStats();
+		updateMilestoneStats();
+		updateAllChargerUpgEffects();
+		updateAutomationStats();
+		updateTokenStats();
+		updateSigilEffects();
+		allDirty = true;
+	}
 }
 
 function updateVisibleUnlocks() {
@@ -291,8 +314,8 @@ function checkEndgame() {
     desc.innerHTML = `
         You've purchased all the available unlocks currently in the game!<br/>
         However, it is not the end of the journey...<br/>
-        Collapse is not implemented yet, make sure to stay tuned for future game updates!<br/>
-        <br/>
+        Collapse is just implemented by loader3229, make sure to stay tuned for future game updates!<br/>
+        To collapse the first reset layer, you need to reset Hyperity once after unlocking collapse.<br/>
         Time played: <b>${format.time(game.stats.timePlayed)}</b><br/>
     `
     showOverlay("popup", "Congratulations!", desc, ["Ok"]);
@@ -332,4 +355,39 @@ function doResetAuto(times) {
         }
         break;
     }
+}
+
+function getHighestButtonForCollapse(row, amount){
+    let base = D.eq(row, 0) ? 5 : D.eq(row, 1) ? 1e5 : D.pow(2, row).mul(250);
+    return D.div(D(amount).max(0), base).add(1).logBase(D.add(row, 1).mul(10)).div(10).add(1).logBase(1.1);
+}
+
+/* function getMultiReqForCollapse(row, amount, orig){
+	if(game.unlocks.col2)return orig;
+	amount = amount.div(getRowMulti(row)).div(temp.sigilEffects[0]);
+    let tier = getButtonTierForCollapse(row, amount);
+	if(D(row).gte(2))return getMultiReqForCollapse(D(row).sub(1), getButtonCostForCollapse(row, tier), orig);
+    return getButtonCostForCollapse(row, tier).max(orig);
+} */
+
+function getButtonTierForCollapse(row, amount) {
+    let base = D.eq(row, 0) ? 8 : 4;
+    let mult = D.eq(row, 0) ? 1 : D.add(row, 1);
+	return amount.div(mult).logBase(base).div(20).max(-1).add(1).logBase(1.05);
+}
+
+function getButtonCostForCollapse(row, tier) {
+    let base = D.eq(row, 0) ? 5 : D.eq(row, 1) ? 1e5 : D.pow(2, row).mul(250);
+    return D.add(row, 1).mul(10).pow(D.pow(1.1, tier).sub(1).mul(10)).mul(base);
+}
+
+function getCollapseMult() {
+	let m = game.ladder[0].amount, mult = D(1);
+    if(game.collapsed.gte(1)){
+		for(let i = 1;i <= game.collapsed.toNumber();i++){
+			m = getButtonGain(i, getHighestButtonForCollapse(i, m)).mul(getRowMulti(i)).mul(temp.sigilEffects[0]);
+			mult = mult.mul(m);
+		}
+	}
+	return mult;
 }

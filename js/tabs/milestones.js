@@ -93,8 +93,8 @@ tabs.milestones = {
         for (let a = 0; a < game.ladder.length; a++) {
             let data = game.ladder[a];
             let row = this.data.rows[a];
-            let name = D.lt(data.tier, tierNames.length) ? tierNames[D(data.tier).toNumber()] : "p";
-            row.style.setProperty("--background", D.lt(data.tier, tierColors.length) ? tierColors[D(data.tier).toNumber()] : "#f45");
+            let name = D.lt(data.tier, tierNames.length) ? tierNames[D(data.tier).toNumber()] : "Reset "+D(data.tier).toNumber();
+            row.style.setProperty("--background", tierColors[D(data.tier).toNumber()%tierColors.length]);
             row.amount.textContent = format(data.amount);
             row.name.textContent = name;
 

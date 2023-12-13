@@ -95,8 +95,9 @@ tabs.sigils = {
         for (let b = 0; b < game.sigils.length; b++) {
             let ctn = this.data.details.items[b];
             let tier = game.ladder[b].tier;
-            let name = D.lt(tier, tierNames.length) ? tierNames[D(tier).toNumber()] : "p";
+            let name = D.lt(tier, tierNames.length) ? tierNames[D(tier).toNumber()] : "Reset "+D(tier).toNumber();
             ctn.textContent = "×" + format(temp.sigilEffects[b], 2) + " all " + name + " gains";
+			if(b == 0 && game.unlocks.col1)ctn.textContent = "×" + format(temp.sigilEffects[b], 2) + " all " + name + "/Collapsed Layer gains";
         }
     },
     onEnd() {

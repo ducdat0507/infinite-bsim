@@ -23,9 +23,18 @@ let milestones = {
             goalAmount: (x) => D.add(x, 1).mul(D.add(x, 15)),
             goalText: ["Complete", "milestones for"],
             goalPrecision: 0,
-            rewardAmount: (x, row) => D.mul(0.5, x).add(2),
+            rewardAmount: (x, row) => D.mul(D.pow(2,(D(game.milestones.collapse||0)).sub(1)), x).add(2),
             rewardText: ["×{0}", "all above milestones' effect"],
             rewardPrecision: 1,
+        },
+        collapse: {
+            goalTarget: (row) => game.collapsed,
+            goalAmount: (x) => D.add(x, 1),
+            goalText: ["Collapse", "layers for"],
+            goalPrecision: 0,
+            rewardAmount: (x, row) => D.pow(2, x),
+            rewardText: ["×{0}", "above milestones' effect(Resets previous milestone)"],
+            rewardPrecision: 0,
         },
     },
     rows: {
@@ -55,7 +64,8 @@ function clickGlobalMilestone(id) {
     let level = game.milestones[id] ?? 0;
     if (D.gte(data.goalTarget(), data.goalAmount(level))) {
         game.milestones[id] = D.add(level, 1);
-        updateMilestoneStats();
+        if(id=="collapse")delete game.milestones.meta;
+		updateMilestoneStats();
     }
 }
 
